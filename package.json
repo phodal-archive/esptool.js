@@ -1,0 +1,23 @@
+{
+  "name": "esptool",
+  "version": "0.0.1",
+  "description": "A Tool translate from esptool.py",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iot-works/esptool.js.git"
+  },
+  "author": "Phodal Huang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iot-works/esptool.js/issues"
+  },
+  "homepage": "https://github.com/iot-works/esptool.js",
+  "dependencies": {
+    "python-js": "^0.9.8",
+    "serialport": "^1.7.4"
+  }
+}
