@@ -3,19 +3,38 @@ var SerialPort = require("serialport").SerialPort;
 var fs = require('fs');
 
 function ESPROM() {
+    //These are the currently known commands supported by the ROM
     this.ESP_FLASH_BEGIN = 0x02;
-    this.ESP_FLASH_DATA = 0x03;
-    this.ESP_FLASH_END = 0x04;
-    this.ESP_MEM_BEGIN = 0x05;
-    this.ESP_MEM_END = 0x06;
-    this.ESP_MEM_DATA = 0x07;
-    this.ESP_SYNC = 0x08;
-    this.ESP_WRITE_REG = 0x09;
-    this.ESP_READ_REG = 0x0a;
-    this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 115200,
-        bufferSize: 1
-    });
+    this.ESP_FLASH_DATA  = 0x03;
+    this.ESP_FLASH_END   = 0x04;
+    this.ESP_MEM_BEGIN   = 0x05;
+    this.ESP_MEM_END     = 0x06;
+    this.ESP_MEM_DATA    = 0x07;
+    this.ESP_SYNC        = 0x08;
+    this.ESP_WRITE_REG   = 0x09;
+    this.ESP_READ_REG    = 0x0a;
+
+    //Maximum block sized for RAM and Flash writes, respectively.
+        this.ESP_RAM_BLOCK   = 0x1800;
+    this.ESP_FLASH_BLOCK = 0x100;
+
+    //Default baudrate. The ROM auto-bauds, so we can use more or less whatever we want.
+        this.ESP_ROM_BAUD    = 115200;
+
+    //First byte of the application image
+    this.ESP_IMAGE_MAGIC = 0xe9;
+
+    //Initial state for the checksum routine
+    this.ESP_CHECKSUM_MAGIC = 0xef;
+
+    //OTP ROM addresses
+    this.ESP_OTP_MAC0    = 0x3ff00050;
+    this.ESP_OTP_MAC1    = 0x3ff00054;
+    //
+    //this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
+    //    baudrate: 115200,
+    //    bufferSize: 1
+    //});
 }
 
 ESPROM.prototype.read = function () {
@@ -42,7 +61,7 @@ ESPROM.prototype.write = function () {
 //        return console.log(err);
 //    }
 //    var esprom = new ESPROM();
-//    esprom.read();
+//    this.ESProm.read();
 //    console.log(data);
 //});
 
