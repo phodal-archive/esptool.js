@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/iot-works/esptool.js",
   "dependencies": {
-    "python-js": "^0.9.8",
-    "serialport": "^1.7.4"
+    "pypacker": "^0.2.1",
+    "serialport": "^1.7.4",
+    "struct": "0.0.8"
   }
 }

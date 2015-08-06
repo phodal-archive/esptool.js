@@ -1,6 +1,7 @@
 var serialPort = require("serialport");
 var SerialPort = require("serialport").SerialPort;
 var fs = require('fs');
+var Packer = require('pypacker');
 
 function ESPROM() {
     //These are the currently known commands supported by the ROM
@@ -179,6 +180,21 @@ ESPROM.prototype.flash_block = function () {
 
 };
 
+ESPROM.prototype.read_reg = function (addr) {
+    var message = new Packer('<I').pack(addr);
+    console.log(message.toString());
+    var res = this.command(this.ESP_READ_REG, message);
+    console.log(res);
+    if(res[1] !== "\0\0") {
+        console.log('Failed to read target memory')
+    }
+    return res[0]
+};
+
+ESPROM.prototype.read_mac = function () {
+
+};
+
 ESPROM.prototype.run = function () {
 
 };
@@ -188,5 +204,5 @@ fs.readFile('test/nodemcu_float_0.9.6-dev_20150704.bin', 'utf8', function (err, 
         return console.log(err);
     }
     var esprom = new ESPROM();
-    esprom.write('\xc0');
+    esprom.read_reg(esprom.ESP_OTP_MAC0);
 });
