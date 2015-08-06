@@ -31,10 +31,10 @@ function ESPROM() {
     this.ESP_OTP_MAC0    = 0x3ff00050;
     this.ESP_OTP_MAC1    = 0x3ff00054;
     //
-    //this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-    //    baudrate: 115200,
-    //    bufferSize: 1
-    //});
+    this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
+        baudrate: 115200,
+        bufferSize: 1
+    });
 }
 
 ESPROM.prototype.read = function () {
@@ -55,16 +55,6 @@ ESPROM.prototype.read = function () {
 ESPROM.prototype.write = function () {
 
 }
-//
-//fs.readFile('test/nodemcu.bin', 'utf8', function (err, data) {
-//    if (err) {
-//        return console.log(err);
-//    }
-//    var esprom = new ESPROM();
-//    this.ESProm.read();
-//    console.log(data);
-//});
-
 
 ESPROM.prototype.read_reg = function () {
 
@@ -78,7 +68,38 @@ ESPROM.prototype.checksum = function () {
 
 };
 ESPROM.prototype.connect = function () {
+    var that = this;
+    var i;
+    var port = this._port;
 
+    function done(){
+        console.log('done');
+        for(i=0; i<10; i++){
+            try {
+
+            } catch (e) {
+                console.log('Failed to connect');
+            }
+        }
+    }
+
+    function setDTRFalse() {
+        port.set({dtr: false}, function () {
+            setTimeout(done, 100);
+        });
+    }
+
+    function clear() {
+        console.log('clear');
+        port.set({rts:false}, function(err, something) {
+            setTimeout(setDTRFalse, 100);
+        });
+    }
+
+    port.set({rts:true, dtr:true}, function(err, something) {
+        console.log('asserted');
+        setTimeout(clear, 100);
+    });
 };
 ESPROM.prototype.command = function () {
 
@@ -101,3 +122,12 @@ ESPROM.prototype.flash_block = function () {
 ESPROM.prototype.run = function () {
 
 };
+
+fs.readFile('test/nodemcu.bin', 'utf8', function (err, data) {
+    if (err) {
+        return console.log(err);
+    }
+    var esprom = new ESPROM();
+    esprom.connect();
+    console.log(data);
+});
