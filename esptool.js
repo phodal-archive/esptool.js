@@ -98,6 +98,7 @@ ESPROM.prototype.connect = function () {
                 console.log('Failed to connect');
             }
         }
+        that.sync();
         process.exit(-1);
     }
 
@@ -119,10 +120,35 @@ ESPROM.prototype.connect = function () {
     });
 };
 ESPROM.prototype.command = function () {
+    //if self._port.read(1) != '\xc0':
+    //raise Exception('Invalid head of packet')
+    //hdr = self.read(8)
+    //(resp, op_ret, len_ret, val) = struct.unpack('<BBHI', hdr)
+    //if resp != 0x01 or (op and op_ret != op):
+    //raise Exception('Invalid response')
+    //
+    //    # The variable-length body
+    //body = self.read(len_ret)
+    //
+    //    # Terminating byte
+    //if self._port.read(1) != chr(0xc0):
+    //raise Exception('Invalid end of packet')
+    //
+    //return val, body
+    console.log("command");
+    var self = this;
+    if(self) {
+
+    }
 
 };
-ESPROM.prototype.sync = function () {
 
+ESPROM.prototype.sync = function () {
+    var that = this, i;
+    that.command(that.ESP_SYNC, '\x07\x07\x12\x20'+32*'\x55');
+    for(i=0; i<7; i++){
+        that.command()
+    }
 };
 ESPROM.prototype.flash_begin = function () {
 

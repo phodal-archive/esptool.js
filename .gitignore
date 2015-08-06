@@ -92,3 +92,4 @@ node_modules
 pythonjs
 esptool
 .idea
+test/*.bin
