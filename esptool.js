@@ -68,7 +68,6 @@ ESPROM.prototype.checksum = function () {
 
 };
 ESPROM.prototype.connect = function () {
-    var that = this;
     var i;
     var port = this._port;
 
@@ -76,7 +75,11 @@ ESPROM.prototype.connect = function () {
         console.log('done');
         for(i=0; i<10; i++){
             try {
-
+                port.flush(function(err){
+                    if(err !== undefined){
+                        console.log(err);
+                    }
+                })
             } catch (e) {
                 console.log('Failed to connect');
             }
