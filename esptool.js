@@ -5,21 +5,21 @@ var fs = require('fs');
 function ESPROM() {
     //These are the currently known commands supported by the ROM
     this.ESP_FLASH_BEGIN = 0x02;
-    this.ESP_FLASH_DATA  = 0x03;
-    this.ESP_FLASH_END   = 0x04;
-    this.ESP_MEM_BEGIN   = 0x05;
-    this.ESP_MEM_END     = 0x06;
-    this.ESP_MEM_DATA    = 0x07;
-    this.ESP_SYNC        = 0x08;
-    this.ESP_WRITE_REG   = 0x09;
-    this.ESP_READ_REG    = 0x0a;
+    this.ESP_FLASH_DATA = 0x03;
+    this.ESP_FLASH_END = 0x04;
+    this.ESP_MEM_BEGIN = 0x05;
+    this.ESP_MEM_END = 0x06;
+    this.ESP_MEM_DATA = 0x07;
+    this.ESP_SYNC = 0x08;
+    this.ESP_WRITE_REG = 0x09;
+    this.ESP_READ_REG = 0x0a;
 
     //Maximum block sized for RAM and Flash writes, respectively.
-        this.ESP_RAM_BLOCK   = 0x1800;
-    this.ESP_FLASH_BLOCK = 0x100;
+    this.ESP_RAM_BLOCK = 0x1800;
+    this.ESP_FLASH_BLOCK = 0x400;
 
     //Default baudrate. The ROM auto-bauds, so we can use more or less whatever we want.
-        this.ESP_ROM_BAUD    = 115200;
+    this.ESP_ROM_BAUD = 115200;
 
     //First byte of the application image
     this.ESP_IMAGE_MAGIC = 0xe9;
@@ -28,46 +28,64 @@ function ESPROM() {
     this.ESP_CHECKSUM_MAGIC = 0xef;
 
     //OTP ROM addresses
-    this.ESP_OTP_MAC0    = 0x3ff00050;
-    this.ESP_OTP_MAC1    = 0x3ff00054;
+    this.ESP_OTP_MAC0 = 0x3ff00050;
+    this.ESP_OTP_MAC1 = 0x3ff00054;
     //
     this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
         baudrate: 115200,
         bufferSize: 1,
         databits: 8,
-        parser: serialPort.parsers.readline("\r")
+        parser: serialPort.parsers.byteLength(1)
+    });
+
+    var port = this._port;
+    port.on("open", function () {
+        console.log('open');
+        port.on('data', function (data) {
+            console.log("=============");
+            console.log(data);
+        });
     });
 }
 
 ESPROM.prototype.read = function () {
     //var b = '';
-    //var that = this;
+    //var self = this;
     //var length = 1;
     //
     ////while(b.length < length) {
-    //that._port.on('open', function () {
+    //self._port.on('open', function () {
     //    console.log('Node.js: Open Port');
     //});
-    //that._port.on('data', function (data) {
+    //self._port.on('data', function (data) {
     //    console.log(data[0]);
     //});
     //return b;
 };
 
 // Write bytes to the serial port while performing SLIP escaping
-ESPROM.prototype.write = function (self, packet) {
+ESPROM.prototype.write = function (packet) {
     var buffer = '\xc0', b;
-    for(b in packet) {
-        if(b === '\xc0'){
+    for (b in packet) {
+        if (b === '\xc0') {
             buffer += '\xdb\xdc';
-        } else if ( b === '\xdb') {
+        } else if (b === '\xdb') {
             buffer += '\xdb\xdb';
         } else {
             buffer += b;
         }
     }
     buffer += '\xc0';
-    this.port.write(buffer);
+    var that = this;
+    this._port.on('open', function (error) {
+        console.log("write buffer:", buffer);
+        that._port.write(buffer, function (err) {
+            if (err) {
+                console.log(err);
+            }
+            process.exit(-1);
+        });
+    })
 };
 
 ESPROM.prototype.read_reg = function () {
@@ -83,14 +101,14 @@ ESPROM.prototype.checksum = function () {
 };
 ESPROM.prototype.connect = function () {
     var i;
-    var port = this._port;
+    var port = this._port, that = this;
 
-    function done(){
+    function done() {
         console.log('done');
-        for(i=0; i<10; i++){
+        for (i = 0; i < 10; i++) {
             try {
-                port.flush(function(err){
-                    if(err !== undefined){
+                port.flush(function (err) {
+                    if (err !== undefined) {
                         console.log(err);
                     }
                 })
@@ -99,7 +117,7 @@ ESPROM.prototype.connect = function () {
             }
         }
         that.sync();
-        process.exit(-1);
+        //process.exit(-1);
     }
 
     function setDTRFalse() {
@@ -110,12 +128,12 @@ ESPROM.prototype.connect = function () {
 
     function clear() {
         console.log('clear');
-        port.set({rts:false}, function(err, something) {
+        port.set({rts: false}, function (err, something) {
             setTimeout(setDTRFalse, 100);
         });
     }
 
-    port.set({rts:true, dtr:true}, function(err, something) {
+    port.set({rts: true, dtr: true}, function (err, something) {
         setTimeout(clear, 100);
     });
 };
@@ -137,16 +155,15 @@ ESPROM.prototype.command = function () {
     //return val, body
     console.log("command");
     var self = this;
-    if(self) {
+    if (self) {
 
     }
-
 };
 
 ESPROM.prototype.sync = function () {
     var that = this, i;
-    that.command(that.ESP_SYNC, '\x07\x07\x12\x20'+32*'\x55');
-    for(i=0; i<7; i++){
+    that.command(that.ESP_SYNC, '\x07\x07\x12\x20' + 32 * '\x55');
+    for (i = 0; i < 7; i++) {
         that.command()
     }
 };
@@ -166,11 +183,10 @@ ESPROM.prototype.run = function () {
 
 };
 
-fs.readFile('test/nodemcu.bin', 'utf8', function (err, data) {
+fs.readFile('test/nodemcu_float_0.9.6-dev_20150704.bin', 'utf8', function (err, data) {
     if (err) {
         return console.log(err);
     }
     var esprom = new ESPROM();
-    esprom.connect();
-    console.log(data);
+    esprom.write('\xc0');
 });
