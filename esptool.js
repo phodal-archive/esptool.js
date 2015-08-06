@@ -54,9 +54,21 @@ ESPROM.prototype.read = function () {
     //return b;
 };
 
-ESPROM.prototype.write = function () {
-
-}
+// Write bytes to the serial port while performing SLIP escaping
+ESPROM.prototype.write = function (self, packet) {
+    var buffer = '\xc0', b;
+    for(b in packet) {
+        if(b === '\xc0'){
+            buffer += '\xdb\xdc';
+        } else if ( b === '\xdb') {
+            buffer += '\xdb\xdb';
+        } else {
+            buffer += b;
+        }
+    }
+    buffer += '\xc0';
+    this.port.write(buffer);
+};
 
 ESPROM.prototype.read_reg = function () {
 
