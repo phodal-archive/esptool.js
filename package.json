@@ -11,7 +11,7 @@
     "url": "https://github.com/iot-works/esptool.js.git"
   },
   "author": "Phodal Huang",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/iot-works/esptool.js/issues"
   },
