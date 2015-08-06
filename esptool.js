@@ -33,7 +33,9 @@ function ESPROM() {
     //
     this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
         baudrate: 115200,
-        bufferSize: 1
+        bufferSize: 1,
+        databits: 8,
+        parser: serialPort.parsers.readline("\r")
     });
 }
 
@@ -84,6 +86,7 @@ ESPROM.prototype.connect = function () {
                 console.log('Failed to connect');
             }
         }
+        process.exit(-1);
     }
 
     function setDTRFalse() {
@@ -100,7 +103,6 @@ ESPROM.prototype.connect = function () {
     }
 
     port.set({rts:true, dtr:true}, function(err, something) {
-        console.log('asserted');
         setTimeout(clear, 100);
     });
 };
