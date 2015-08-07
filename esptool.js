@@ -33,19 +33,10 @@ function ESPROM() {
     this.ESP_OTP_MAC1 = 0x3ff00054;
     //
     this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 115200,
+        baudrate: 9200,
         bufferSize: 1,
         databits: 8,
         parser: serialPort.parsers.byteLength(1)
-    });
-
-    var port = this._port;
-    port.on("open", function () {
-        console.log('open');
-        port.on('data', function (data) {
-            console.log("=============");
-            console.log(data);
-        });
     });
 }
 
@@ -155,10 +146,22 @@ ESPROM.prototype.command = function () {
     //
     //return val, body
     console.log("command");
-    var self = this;
-    if (self) {
+    var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {}, true);
 
-    }
+    setTimeout(null, 100);
+    port.on("open", function () {
+        port.write("\r");
+        port.on('data', function(data) {
+            console.log(data.toString());
+        });
+
+        port.write("print '19'");
+        port.on('data', function(data) {
+            console.log(data.toString());
+        });
+    });
+
+    return [];
 };
 
 ESPROM.prototype.sync = function () {
@@ -184,7 +187,6 @@ ESPROM.prototype.read_reg = function (addr) {
     var message = new Packer('<I').pack(addr);
     console.log(message.toString());
     var res = this.command(this.ESP_READ_REG, message);
-    console.log(res);
     if(res[1] !== "\0\0") {
         console.log('Failed to read target memory')
     }
