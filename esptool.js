@@ -133,6 +133,7 @@ ESPROM.prototype.connect = function () {
         setTimeout(clear, 100);
     });
 };
+
 ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
@@ -207,10 +208,5 @@ ESPROM.prototype.run = function () {
 
 };
 
-fs.readFile('test/nodemcu_float_0.9.6-dev_20150704.bin', 'utf8', function (err, data) {
-    if (err) {
-        return console.log(err);
-    }
-    var esprom = new ESPROM();
-    esprom.connect();
-});
+var esprom = new ESPROM();
+esprom.connect();
