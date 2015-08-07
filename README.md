@@ -1,6 +1,6 @@
 # esptool.js
 
-``attention``: not function word now
+``attention``: not work now.
     
 ##Goal
     
