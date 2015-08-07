@@ -129,7 +129,7 @@ ESPROM.prototype.connect = function () {
         setTimeout(clear, 100);
     });
 };
-ESPROM.prototype.command = function () {
+ESPROM.prototype.command = function (op, data) {
     //if self._port.read(1) != '\xc0':
     //raise Exception('Invalid head of packet')
     //hdr = self.read(8)
@@ -146,18 +146,22 @@ ESPROM.prototype.command = function () {
     //
     //return val, body
     console.log("command");
-    var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {}, true);
+    var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
+        baudrate: 9200,
+        bufferSize: 1,
+        databits: 8,
+        parser: serialPort.parsers.byteLength(1)
+    }, true);
 
-    setTimeout(null, 100);
     port.on("open", function () {
-        port.write("\r");
-        port.on('data', function(data) {
-            console.log(data.toString());
+        var addr = new Packer('<BBHI').pack(0x00,0,0, data.length) ;
+        console.log(addr, data);
+        console.log(addr + data);
+        port.write(addr + data, function(err){
+            console.log(err);
         });
-
-        port.write("print '19'");
-        port.on('data', function(data) {
-            console.log(data.toString());
+        port.on('data', function(result) {
+            console.log(result.toString());
         });
     });
 
@@ -185,7 +189,6 @@ ESPROM.prototype.flash_block = function () {
 
 ESPROM.prototype.read_reg = function (addr) {
     var message = new Packer('<I').pack(addr);
-    console.log(message.toString());
     var res = this.command(this.ESP_READ_REG, message);
     if(res[1] !== "\0\0") {
         console.log('Failed to read target memory')
