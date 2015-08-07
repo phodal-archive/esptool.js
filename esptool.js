@@ -96,7 +96,11 @@ ESPROM.prototype.connect = function () {
     var port = this._port, that = this;
 
     function done() {
-        console.log('done');
+        port.on("open", function () {
+            port.on('data', function(result) {
+                console.log(result.toString());
+            });
+        });
         for (i = 0; i < 10; i++) {
             try {
                 port.flush(function (err) {
@@ -130,21 +134,6 @@ ESPROM.prototype.connect = function () {
     });
 };
 ESPROM.prototype.command = function (op, data) {
-    //if self._port.read(1) != '\xc0':
-    //raise Exception('Invalid head of packet')
-    //hdr = self.read(8)
-    //(resp, op_ret, len_ret, val) = struct.unpack('<BBHI', hdr)
-    //if resp != 0x01 or (op and op_ret != op):
-    //raise Exception('Invalid response')
-    //
-    //    # The variable-length body
-    //body = self.read(len_ret)
-    //
-    //    # Terminating byte
-    //if self._port.read(1) != chr(0xc0):
-    //raise Exception('Invalid end of packet')
-    //
-    //return val, body
     console.log("command");
     var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
         baudrate: 9200,
@@ -154,11 +143,16 @@ ESPROM.prototype.command = function (op, data) {
     }, true);
 
     port.on("open", function () {
-        var addr = new Packer('<BBHI').pack(0x00,0,0, data.length) ;
+        var length = 0;
+        if(data & data !== undefined) {
+            length = data.length();
+        }
+        var addr = new Packer('<BBHI').pack(0x00, 0, length, 0) ;
         console.log(addr, data);
-        console.log(addr + data);
         port.write(addr + data, function(err){
-            console.log(err);
+            if(err){
+                console.log(err);
+            }
         });
         port.on('data', function(result) {
             console.log(result.toString());
@@ -169,8 +163,9 @@ ESPROM.prototype.command = function (op, data) {
 };
 
 ESPROM.prototype.sync = function () {
+    var U32 = '\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55\x55';
     var that = this, i;
-    that.command(that.ESP_SYNC, '\x07\x07\x12\x20' + 32 * '\x55');
+    that.command(that.ESP_SYNC, '\x07\x07\x12\x20' + U32);
     for (i = 0; i < 7; i++) {
         that.command()
     }
@@ -217,5 +212,5 @@ fs.readFile('test/nodemcu_float_0.9.6-dev_20150704.bin', 'utf8', function (err, 
         return console.log(err);
     }
     var esprom = new ESPROM();
-    esprom.read_reg(esprom.ESP_OTP_MAC0);
+    esprom.connect();
 });
