@@ -193,6 +193,14 @@ ESPROM.prototype.read_reg = function (addr) {
     return res[0]
 };
 
+ESPROM.prototype.write_reg = function (addr, value, mask) {
+    var delay_us = 0;
+    var packet = new Packer('<IIII').pack(addr, value, mask, delay_us);
+    if(this.command(this.ESP_WRITE_REG, packet)[1] !== "\0\0") {
+        console.log('Failed to write target memory');
+    }
+};
+
 ESPROM.prototype.read_mac = function () {
 
 };
