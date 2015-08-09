@@ -1,6 +1,16 @@
 # esptool.js
 
 ``attention``: not work now.
+
+##Setup
+
+1.Install
+
+    npm install
+
+2.Run
+
+    node esptool.js
     
 ##Goal
     
