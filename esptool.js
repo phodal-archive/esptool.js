@@ -33,7 +33,7 @@ function ESPROM() {
     this.ESP_OTP_MAC1 = 0x3ff00054;
     //
     this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 9200,
+        baudrate: 9600,
         bufferSize: 1,
         databits: 8,
         parser: serialPort.parsers.byteLength(1)
@@ -97,7 +97,7 @@ ESPROM.prototype.connect = function () {
 
     function done() {
         port.on("open", function () {
-            port.on('data', function(result) {
+            port.on('data', function (result) {
                 console.log(result.toString());
             });
         });
@@ -137,26 +137,16 @@ ESPROM.prototype.connect = function () {
 ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 9200,
-        bufferSize: 1,
-        databits: 8,
-        parser: serialPort.parsers.byteLength(1)
+        baudrate: 9600,
+        //parser: serialPort.parsers.readline("\n")
     }, true);
 
     port.on("open", function () {
-        var length = 0;
-        if(data & data !== undefined) {
-            length = data.length();
-        }
-        var addr = new Packer('<BBHI').pack(0x00, 0, length, 0) ;
-        console.log(addr, data);
-        port.write(addr + data, function(err){
-            if(err){
-                console.log(err);
-            }
+        port.on("data", function (data) {
+            console.log(data.toString());
         });
-        port.on('data', function(result) {
-            console.log(result.toString());
+        port.write('print "19"\n', function (err, results) {
+            console.log("results " + results);
         });
     });
 
@@ -186,7 +176,7 @@ ESPROM.prototype.flash_block = function () {
 ESPROM.prototype.read_reg = function (addr) {
     var message = new Packer('<I').pack(addr);
     var res = this.command(this.ESP_READ_REG, message);
-    if(res[1] !== "\0\0") {
+    if (res[1] !== "\0\0") {
         console.log('Failed to read target memory')
     }
     return res[0]
@@ -195,7 +185,7 @@ ESPROM.prototype.read_reg = function (addr) {
 ESPROM.prototype.write_reg = function (addr, value, mask) {
     var delay_us = 0;
     var packet = new Packer('<IIII').pack(addr, value, mask, delay_us);
-    if(this.command(this.ESP_WRITE_REG, packet)[1] !== "\0\0") {
+    if (this.command(this.ESP_WRITE_REG, packet)[1] !== "\0\0") {
         console.log('Failed to write target memory');
     }
 };
@@ -209,4 +199,4 @@ ESPROM.prototype.run = function () {
 };
 
 var esprom = new ESPROM();
-esprom.connect();
+esprom.command(esprom.ESP_OTP_MAC0);
