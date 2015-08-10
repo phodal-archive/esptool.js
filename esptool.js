@@ -2,6 +2,7 @@ var serialPort = require("serialport");
 var SerialPort = require("serialport").SerialPort;
 var fs = require('fs');
 var Packer = require('pypacker');
+var os = require('os');
 
 function ESPROM() {
     //These are the currently known commands supported by the ROM
@@ -32,9 +33,10 @@ function ESPROM() {
     this.ESP_OTP_MAC0 = 0x3ff00050;
     this.ESP_OTP_MAC1 = 0x3ff00054;
     //
-    this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        parser: serialPort.parsers.byteLength(1)
-    });
+    // this makes "Access denied" error in Windows, conflict with command()
+    // this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
+    //     parser: serialPort.parsers.byteLength(1)
+    // });
 }
 
 ESPROM.prototype.read = function () {
@@ -133,15 +135,20 @@ ESPROM.prototype.connect = function () {
 
 ESPROM.prototype.command = function (op, data) {
     console.log("command");
-    var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
+    var portNum = "/dev/tty.SLAB_USBtoUART";
+    if("win32" == os.platform() || "win64" == os.platform() )
+    	portNum = "com2";
+     console.log("opening " + portNum);
+    var port = new SerialPort(portNum, {
         parser: serialPort.parsers.byteLength(1)
     }, true);
 
     port.on("open", function () {
         port.on("data", function (data) {
-            console.log(data.toString());
+            // console.log(data.toString());
+            process.stdout.write(data.toString());
         });
-        port.write('print "19"\n', function (err, results) {
+        port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
             console.log("results " + results);
         });
     });
