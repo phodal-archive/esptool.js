@@ -33,8 +33,9 @@ function ESPROM() {
     this.ESP_OTP_MAC1 = 0x3ff00054;
 
     var portNum = "/dev/tty.SLAB_USBtoUART";
-    if("win32" == os.platform() || "win64" == os.platform() )
+    if ("win32" == os.platform() || "win64" == os.platform()) {
         portNum = "com2";
+    }
     console.log("opening " + portNum);
     this.port = new SerialPort(portNum, {
         parser: serialPort.parsers.byteLength(1)
@@ -82,7 +83,7 @@ ESPROM.prototype.checksum = function () {
 };
 ESPROM.prototype.connect = function () {
     var i;
-    var port = this._port, that = this;
+    var port = this.port, that = this;
 
     function done() {
         port.on("open", function () {
@@ -90,7 +91,7 @@ ESPROM.prototype.connect = function () {
                 console.log(result.toString());
             });
         });
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < 4; i++) {
             try {
                 port.flush(function (err) {
                     if (err !== undefined) {
@@ -98,7 +99,7 @@ ESPROM.prototype.connect = function () {
                     }
                 })
             } catch (e) {
-                console.log('Failed to connect');
+                throw new Error('Failed to connect');
             }
         }
         that.sync();
@@ -127,15 +128,25 @@ ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var self = this;
 
-    self.port.open( function () {
-        self.port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
-            console.log("results " + results);
+    console.log(op);
+    if(op !== undefined) {
+        self.port.open(function () {
+            self.port.write('\x00\n\x00\x00\x00\x00\x00\x000x3ff00050', function (err, results) {
+                console.log("results " + results);
+                self.port.close();
+            });
         });
+    }
+
+    self.port.open(function () {
         self.port.on("data", function (data) {
             process.stdout.write(data.toString());
+            if(data !== '\xc0'){
+                throw new Error('Invalid head of packet');
+            }
+            self.port.close();
         });
     });
-
     return [];
 };
 
@@ -185,4 +196,5 @@ ESPROM.prototype.run = function () {
 };
 
 var esprom = new ESPROM();
+esprom.connect();
 esprom.command(esprom.ESP_OTP_MAC0);
