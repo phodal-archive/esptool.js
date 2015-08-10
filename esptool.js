@@ -33,9 +33,6 @@ function ESPROM() {
     this.ESP_OTP_MAC1 = 0x3ff00054;
     //
     this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 9600,
-        bufferSize: 1,
-        databits: 8,
         parser: serialPort.parsers.byteLength(1)
     });
 }
@@ -137,8 +134,7 @@ ESPROM.prototype.connect = function () {
 ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-        baudrate: 9600,
-        //parser: serialPort.parsers.readline("\n")
+        parser: serialPort.parsers.byteLength(1)
     }, true);
 
     port.on("open", function () {
