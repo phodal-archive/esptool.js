@@ -1,6 +1,5 @@
 var serialPort = require("serialport");
 var SerialPort = require("serialport").SerialPort;
-var fs = require('fs');
 var Packer = require('pypacker');
 var os = require('os');
 
@@ -43,21 +42,9 @@ function ESPROM() {
 }
 
 ESPROM.prototype.read = function () {
-    //var b = '';
-    //var self = this;
-    //var length = 1;
-    //
-    ////while(b.length < length) {
-    //self._port.on('open', function () {
-    //    console.log('Node.js: Open Port');
-    //});
-    //self._port.on('data', function (data) {
-    //    console.log(data[0]);
-    //});
-    //return b;
+
 };
 
-// Write bytes to the serial port while performing SLIP escaping
 ESPROM.prototype.write = function (packet) {
     var buffer = '\xc0', b;
     for (b in packet) {
@@ -71,13 +58,13 @@ ESPROM.prototype.write = function (packet) {
     }
     buffer += '\xc0';
     var that = this;
-    this._port.on('open', function (error) {
+    this.port.on('open', function (error) {
         console.log("write buffer:", buffer);
-        that._port.write(buffer, function (err) {
+        that.port.write(buffer, function (err) {
             if (err) {
                 console.log(err);
             }
-            process.exit(-1);
+            //process.exit(-1);
         });
     })
 };
@@ -140,12 +127,12 @@ ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var self = this;
 
-    self.port.on("open", function () {
-        self.port.on("data", function (data) {
-            process.stdout.write(data.toString());
-        });
+    self.port.open( function () {
         self.port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
             console.log("results " + results);
+        });
+        self.port.on("data", function (data) {
+            process.stdout.write(data.toString());
         });
     });
 
