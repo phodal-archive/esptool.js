@@ -32,6 +32,14 @@ function ESPROM() {
     //OTP ROM addresses
     this.ESP_OTP_MAC0 = 0x3ff00050;
     this.ESP_OTP_MAC1 = 0x3ff00054;
+
+    var portNum = "/dev/tty.SLAB_USBtoUART";
+    if("win32" == os.platform() || "win64" == os.platform() )
+        portNum = "com2";
+    console.log("opening " + portNum);
+    this.port = new SerialPort(portNum, {
+        parser: serialPort.parsers.byteLength(1)
+    }, true);
 }
 
 ESPROM.prototype.read = function () {
@@ -130,19 +138,13 @@ ESPROM.prototype.connect = function () {
 
 ESPROM.prototype.command = function (op, data) {
     console.log("command");
-    var portNum = "/dev/tty.SLAB_USBtoUART";
-    if("win32" == os.platform() || "win64" == os.platform() )
-    	portNum = "com2";
-     console.log("opening " + portNum);
-    var port = new SerialPort(portNum, {
-        parser: serialPort.parsers.byteLength(1)
-    }, true);
+    var self = this;
 
-    port.on("open", function () {
-        port.on("data", function (data) {
+    self.port.on("open", function () {
+        self.port.on("data", function (data) {
             process.stdout.write(data.toString());
         });
-        port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
+        self.port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
             console.log("results " + results);
         });
     });
