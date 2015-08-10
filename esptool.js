@@ -32,11 +32,6 @@ function ESPROM() {
     //OTP ROM addresses
     this.ESP_OTP_MAC0 = 0x3ff00050;
     this.ESP_OTP_MAC1 = 0x3ff00054;
-    //
-    // this makes "Access denied" error in Windows, conflict with command()
-    // this._port = new SerialPort("/dev/tty.SLAB_USBtoUART", {
-    //     parser: serialPort.parsers.byteLength(1)
-    // });
 }
 
 ESPROM.prototype.read = function () {
@@ -145,7 +140,6 @@ ESPROM.prototype.command = function (op, data) {
 
     port.on("open", function () {
         port.on("data", function (data) {
-            // console.log(data.toString());
             process.stdout.write(data.toString());
         });
         port.write('print("hello world") for i=1,5 do print(i) end\n', function (err, results) {
