@@ -32,6 +32,9 @@ Using node-serialport is pretty easy because it is pretty basic. It provides you
 
 2. JSPacker Pack Result
 
+##Some Useful Code
+
+[Smart.js ESP8266.cc](https://github.com/cesanta/smart.js/blob/master/flashnchips/esp8266.cc)
 
 ## License
 

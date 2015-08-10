@@ -103,7 +103,6 @@ ESPROM.prototype.connect = function () {
             }
         }
         that.sync();
-        //process.exit(-1);
     }
 
     function setDTRFalse() {
@@ -128,25 +127,32 @@ ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var self = this;
 
-    console.log(op);
     if(op !== undefined) {
         self.port.open(function () {
-            self.port.write('\x00\n\x00\x00\x00\x00\x00\x000x3ff00050', function (err, results) {
-                console.log("results " + results);
+            //\x00\n\x04\x00\x00\x00\x00\x00P\x00\xf0?
+            var length = 0x00;
+            if(data !== undefined){
+                length = data.length.toString(16);
+                console.log("Data Length:",length);
+            }
+
+            self.port.on("data", function (data) {
+                process.stdout.write("...........");
+                process.stdout.write(data.toString());
+                if (data !== '\xc0') {
+                    throw new Error('Invalid head of packet');
+                }
+            });
+
+            var writeData = '\x00\n' + length + '\x00\x00\x00\x00\x00' + data;
+            console.log('Write Data:', writeData);
+            self.port.write(writeData, function (err, results) {
+                console.log("Char Length:" + results);
                 self.port.close();
             });
         });
     }
 
-    self.port.open(function () {
-        self.port.on("data", function (data) {
-            process.stdout.write(data.toString());
-            if(data !== '\xc0'){
-                throw new Error('Invalid head of packet');
-            }
-            self.port.close();
-        });
-    });
     return [];
 };
 
@@ -172,6 +178,8 @@ ESPROM.prototype.flash_block = function () {
 
 ESPROM.prototype.read_reg = function (addr) {
     var message = new Packer('<I').pack(addr);
+    //P\x00\xf0?
+    console.log("reg addr:", message.toString('hex'));
     var res = this.command(this.ESP_READ_REG, message);
     if (res[1] !== "\0\0") {
         console.log('Failed to read target memory')
@@ -197,4 +205,4 @@ ESPROM.prototype.run = function () {
 
 var esprom = new ESPROM();
 esprom.connect();
-esprom.command(esprom.ESP_OTP_MAC0);
+esprom.read_reg(esprom.ESP_OTP_MAC0);
