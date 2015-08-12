@@ -140,18 +140,15 @@ ESPROM.prototype.command = function (op, data) {
             }
 
             self.port.on("data", function (data) {
-                process.stdout.write("...........");
-                process.stdout.write(data.toString());
+                process.stdout.write("Receive:" + data.toString());
                 if (data !== '\xc0') {
                     throw new Error('Invalid head of packet');
                 }
             });
 
             var writeData = '\x00\n' + length + '\x00\x00\x00\x00\x00' + data;
-            console.log('Write Data:', writeData);
             self.port.write(writeData, function (err, results) {
-                console.log("Char Length:" + results + " Data:" + writeData);
-                self.port.close();
+                console.log("Char Length:" + results + " Data:" + writeData.toString());
             });
         });
     }
@@ -210,5 +207,5 @@ ESPROM.prototype.run = function () {
 
 var esprom = new ESPROM();
 esprom.connect(function () {
+    esprom.read_reg(esprom.ESP_OTP_MAC0);
 });
-esprom.read_reg(esprom.ESP_OTP_MAC0);
