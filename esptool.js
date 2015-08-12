@@ -81,28 +81,31 @@ ESPROM.prototype.write_reg = function () {
 ESPROM.prototype.checksum = function () {
 
 };
-ESPROM.prototype.connect = function () {
+ESPROM.prototype.connect = function (cb) {
     var i;
     var port = this.port, that = this;
 
     function done() {
-        port.on("open", function () {
+        port.open(function () {
             port.on('data', function (result) {
                 console.log(result.toString());
             });
         });
         for (i = 0; i < 4; i++) {
             try {
-                port.flush(function (err) {
-                    if (err !== undefined) {
-                        console.log(err);
-                    }
-                })
+                port.open(function () {
+                    port.flush(function (err) {
+                        if (err !== undefined) {
+                            console.log(err);
+                        }
+                    })
+                });
             } catch (e) {
                 throw new Error('Failed to connect');
             }
         }
         that.sync();
+        cb();
     }
 
     function setDTRFalse() {
@@ -127,13 +130,13 @@ ESPROM.prototype.command = function (op, data) {
     console.log("command");
     var self = this;
 
-    if(op !== undefined) {
+    if (op !== undefined) {
         self.port.open(function () {
             //\x00\n\x04\x00\x00\x00\x00\x00P\x00\xf0?
             var length = 0x00;
-            if(data !== undefined){
+            if (data !== undefined) {
                 length = data.length.toString(16);
-                console.log("Data Length:",length);
+                console.log("Data Length:", length);
             }
 
             self.port.on("data", function (data) {
@@ -147,7 +150,7 @@ ESPROM.prototype.command = function (op, data) {
             var writeData = '\x00\n' + length + '\x00\x00\x00\x00\x00' + data;
             console.log('Write Data:', writeData);
             self.port.write(writeData, function (err, results) {
-                console.log("Char Length:" + results);
+                console.log("Char Length:" + results + " Data:" + writeData);
                 self.port.close();
             });
         });
@@ -161,8 +164,10 @@ ESPROM.prototype.sync = function () {
     var that = this, i;
     that.command(that.ESP_SYNC, '\x07\x07\x12\x20' + U32);
     for (i = 0; i < 7; i++) {
-        that.command()
+        that.command(function () {
+        });
     }
+    return;
 };
 ESPROM.prototype.flash_begin = function () {
 
@@ -204,5 +209,6 @@ ESPROM.prototype.run = function () {
 };
 
 var esprom = new ESPROM();
-esprom.connect();
+esprom.connect(function () {
+});
 esprom.read_reg(esprom.ESP_OTP_MAC0);
